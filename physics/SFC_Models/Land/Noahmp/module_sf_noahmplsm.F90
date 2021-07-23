@@ -451,7 +451,8 @@ contains
                    ghb     , irg     , irc     , irb     , tr      , evc     , & ! out :
                    chleaf  , chuc    , chv2    , chb2    , fpice   , pahv    , &
                    pahg    , pahb    , pah     , esnow   , canhs   , laisun  , &
-                   laisha  , rb      , qsfcveg , qsfcbare                      &
+                   laisha  , rb      , qsfcveg , qsfcbare,                     &
+                   sfcheadrt                                                   &
 #ifdef CCPP
                    ,errmsg, errflg)
 #else
@@ -614,6 +615,7 @@ contains
   real (kind=kind_phys), intent(out) :: tgb
   real (kind=kind_phys)              :: q1
   real (kind=kind_phys), intent(out) :: emissi
+  real (kind=kind_phys)                           , intent(in)    :: sfcheadrt !< surface head (mm)
 !jref:end
 #ifdef CCPP
   character(len=*), intent(inout)    :: errmsg
@@ -886,7 +888,8 @@ contains
                  smcwtd ,deeprech,rech                          , & !inout
                  cmc    ,ecan   ,etran  ,fwet   ,runsrf ,runsub , & !out
                  qin    ,qdis   ,ponding1       ,ponding2,&
-                 qsnbot ,esnow   )  !out
+                 qsnbot ,esnow,                                   & !out
+                 sfcheadrt)  !in
 
 !     write(*,'(a20,10f15.5)') 'sflx:runoff=',runsrf*dt,runsub*dt,edir*dt
 
@@ -7043,7 +7046,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
                     smcwtd ,deeprech,rech                          , & !inout
                     cmc    ,ecan   ,etran  ,fwet   ,runsrf ,runsub , & !out
                     qin    ,qdis   ,ponding1       ,ponding2,        &
-                    qsnbot ,esnow) 
+                    qsnbot ,esnow,                                   &
+                    sfcheadrt) !in
 ! ----------------------------------------------------------------------  
 ! code history:
 ! initial code: guo-yue niu, oct. 2007
@@ -7128,6 +7132,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
   real (kind=kind_phys)                              , intent(in)   :: latheag !< latent heat vap./sublimation (j/kg)
   logical                           , intent(in)   :: frozen_ground !< used to define latent heat pathway
   logical                           , intent(in)   :: frozen_canopy !< used to define latent heat pathway
+! hydro coupling
+  real (kind=kind_phys)                           , intent(in)    :: sfcheadrt !surface head (mm)
 
 
 ! local
@@ -7214,6 +7220,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
        etrani(iz) = etran * btrani(iz) * 0.001
     enddo
 
+    qinsur = qinsur+((sfcheadrt/dt)*0.001)  !sfcheadrt (mm -> m/s)
 
 ! lake/soil water balances
 

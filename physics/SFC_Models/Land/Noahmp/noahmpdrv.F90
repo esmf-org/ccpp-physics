@@ -492,7 +492,9 @@ end subroutine noahmpdrv_timestep_init
       precip_adv_heat_grd_v_ccpp,                                &
       precip_adv_heat_grd_b_ccpp,                                &
       spec_humid_sfc_veg_ccpp,                                   &
-      spec_humid_sfc_bare_ccpp                                   &
+      spec_humid_sfc_bare_ccpp,                                  &
+!  ---  hydro:
+      sfcheadrt, infxsrt, soldrain                               &
       )
 
   use machine ,   only : kind_phys
@@ -697,6 +699,9 @@ end subroutine noahmpdrv_timestep_init
   real(kind=kind_phys), dimension(:)     , intent(out)   :: ztmax      ! thermal roughness length
   real(kind=kind_phys), dimension(:)     , intent(out)   :: rca        ! total canopy/stomatal resistance (s/m)
 
+  real(kind=kind_phys), dimension(:)     , intent(in)    :: sfcheadrt  ! surface head [mm]
+  real(kind=kind_phys), dimension(:)     , intent(out)   :: infxsrt    ! infiltration excess [mm]
+  real(kind=kind_phys), dimension(:)     , intent(out)   :: soldrain   ! soil drainage [mm]
   character(len=*)    ,                    intent(out)   :: errmsg
   integer             ,                    intent(out)   :: errflg
 
@@ -797,6 +802,7 @@ end subroutine noahmpdrv_timestep_init
   real (kind=kind_phys)                            :: o2_air                ! in    | atmospheric o2 concentration [Pa]
   real (kind=kind_phys)                            :: foliage_nitrogen      ! in    | foliage nitrogen [%] [1-saturated]
   real (kind=kind_phys), dimension(-nsnow+1:    0) :: snow_ice_frac_old     ! in    | snow ice fraction at last timestep [-]
+  real (kind=kind_phys)                            :: surface_head          ! in    | surface head [mm]
   real (kind=kind_phys)                            :: forcing_height        ! inout | forcing height [m]
   real (kind=kind_phys)                            :: snow_albedo_old       ! inout | snow albedo at last time step (class option) [-]
   real (kind=kind_phys)                            :: snow_water_equiv_old  ! inout | snow water equivalent at last time step [mm]
@@ -1070,6 +1076,7 @@ end subroutine noahmpdrv_timestep_init
 !
 
       forcing_height               = zf(i)
+      surface_head                 = sfcheadrt(i)
       snow_albedo_old              = alboldxy(i)
       snow_water_equiv_old         = sneqvoxy(i)
       temperature_snow_soil(-2: 0) = tsnoxy(i,:)
@@ -1319,9 +1326,11 @@ end subroutine noahmpdrv_timestep_init
           lai_sunlit            ,lai_shaded            ,leaf_air_resistance   , &
 #ifdef CCPP
           spec_humid_sfc_veg    ,spec_humid_sfc_bare   ,                        &
+          surface_head,                                                         &
           errmsg                ,errflg                )
 #else
-          spec_humid_sfc_veg    ,spec_humid_sfc_bare   )
+          spec_humid_sfc_veg    ,spec_humid_sfc_bare,                           &
+          surface_head)
 #endif
         
 #ifdef CCPP
@@ -1390,6 +1399,8 @@ end subroutine noahmpdrv_timestep_init
       edir      (i)   = evaporation_soil
       drain     (i)   = runoff_baseflow
       runoff    (i)   = runoff_surface
+      infxsrt   (i)   = runoff_surface * timestep
+      soldrain  (i)   = max((runoff_baseflow * timestep), 0.0)
 
       lfmassxy  (i)   = leaf_carbon
       rtmassxy  (i)   = root_carbon

@@ -1595,6 +1595,30 @@
   type = real
   kind = kind_phys
   intent = out
+[sfcheadrt]
+  standard_name = surface_water_depth
+  long_name = surface water depth
+  units = mm
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = in
+[infxsrt]
+  standard_name = time_step_infiltration_excess
+  long_name = time step infiltration excess
+  units = mm
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = out
+[soldrain]
+  standard_name = soil_column_drainage
+  long_name = soil column drainage
+  units = mm
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = out
 [errmsg]
   standard_name = ccpp_error_message
   long_name = error message for error handling in CCPP
